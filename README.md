@@ -116,6 +116,3 @@ npm start # Starts the backend
 
 Contributions, issues, and feature requests are welcome!
 
-## 📝 License
-
-This project is [ISC](https://opensource.org/licenses/ISC) licensed.
