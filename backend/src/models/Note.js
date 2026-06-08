@@ -22,6 +22,22 @@ const noteSchema = new mongoose.Schema(
     }
 );
 
+
+// Pre-hook to enforce validation on update operations
+noteSchema.pre("findOneAndUpdate", function () {
+    const update = this.getUpdate();
+    if (!update) return;
+
+    const $set = update.$set ?? update;
+    if (typeof $set.title === "string") $set.title = $set.title.trim();
+    if (typeof $set.content === "string") $set.content = $set.content.trim();
+
+    if (update.$set) update.$set = $set;
+
+    this.setUpdate(update);
+    this.setOptions({ runValidators: true, context: "query" });
+});
+
 const Note = mongoose.model("Note", noteSchema);
 
 export default Note;
