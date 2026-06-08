@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-//1-create schema
-//2-create model
-//3-export model
+
 const noteSchema = new mongoose.Schema(
     {
         title: {
@@ -37,6 +35,7 @@ noteSchema.pre("findOneAndUpdate", function () {
     this.setUpdate(update);
     this.setOptions({ runValidators: true, context: "query" });
 });
+
 
 const Note = mongoose.model("Note", noteSchema);
 
