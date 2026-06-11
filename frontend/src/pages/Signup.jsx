@@ -51,12 +51,16 @@ const Signup = () => {
       }
     } catch (err) {
       const statusCode = err.response?.status;
+      const errorMsg = err.response?.data?.message || err.response?.data?.error;
+
       if (statusCode === 400) {
+        setError(errorMsg || "Invalid input. Please check your details.");
+      } else if (statusCode === 409) {
         setError("User already exists. Please login instead.");
       } else if (statusCode === 500) {
         setError("Server error. Please try again later.");
       } else {
-        setError(err.response?.data?.error || "Registration failed");
+        setError(errorMsg || "Registration failed. Please try again.");
       }
     } finally {
       setLoading(false);
