@@ -4,4 +4,4 @@ export function formatDate(date) {
     day: "numeric",
     year: "numeric",
   });
-}
+} 

@@ -15,8 +15,22 @@ const noteSchema = new mongoose.Schema(
             maxlength: [5000, "Content cannot exceed 5000 characters"],
         },
     },
-    {
-        timestamps: true,
+    content: {
+        type: String,
+        default: ""
+    },
+    isGroup: {
+        type: Boolean,
+        default: false
+    },
+    parentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Note",
+        default: null
+    },
+    position: {
+        type: Number,
+        default: 0
     }
 );
 
