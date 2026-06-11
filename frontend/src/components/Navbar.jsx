@@ -1,12 +1,18 @@
 
-import { Link } from "react-router-dom";
-import { PlusIcon, Sun, Moon } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { PlusIcon, Sun, Moon, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
 const Navbar = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
@@ -33,13 +39,23 @@ const Navbar = () => {
 
             {/* Auth Buttons */}
             {user ? (
-              <Link 
-                to="/create" 
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-              >
-                <PlusIcon size={16} />
-                <span>New Note</span>
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link 
+                  to="/create" 
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  <PlusIcon size={16} />
+                  <span>New Note</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                  aria-label="Logout"
+                >
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </button>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Link 
