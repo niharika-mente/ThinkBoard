@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Loading spinner background */
+.loading-bg-light {
+  background-color: #f9fafb;
+}
+
+.loading-bg-dark {
+  background-color: #111827;
+}
+
+/* Dark mode support */
+.dark .loading-bg-light {
+  background-color: #111827;
+}
+
+.light .loading-bg-dark {
+  background-color: #f9fafb;
+}

@@ -13,11 +13,16 @@
   "license": "ISC",
   "dependencies": {
     "@upstash/ratelimit": "^2.0.5",
-    "@upstash/redis": "^1.34.9",
+    "@upstash/redis": "^1.38.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.18.2",
-    "mongoose": "^8.14.3"
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.2.0",
+    "mongoose": "^8.14.3",
+    "validator": "^13.15.35"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
