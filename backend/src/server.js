@@ -5,6 +5,7 @@ import path from "path";
 import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
 import dns from "dns";
+import validateEnv from "./config/validateEnv.js";
 
 // Routes
 import notesRoutes from "./routes/notesRoutes.js";
@@ -19,6 +20,7 @@ import rateLimiter from "./middleware/rateLimiter.js";
 
 // ==================== CONFIGURATION ====================
 dotenv.config();
+validateEnv();
 
 // DNS configuration for better connectivity
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
