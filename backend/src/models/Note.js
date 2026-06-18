@@ -1,32 +1,21 @@
 import mongoose from "mongoose";
 
-//1-create schema
-//2-create model
-//3-export model
-const noteSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true
+const noteSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: [true, "Title is required"],
+            trim: true,
+            maxlength: [100, "Title cannot exceed 100 characters"],
+        },
+        content: {
+            type: String,
+            required: [true, "Content is required"],
+            trim: true,
+            maxlength: [5000, "Content cannot exceed 5000 characters"],
+        },
     },
-    content: {
-        type: String,
-        default: ""
-    },
-    isGroup: {
-        type: Boolean,
-        default: false
-    },
-    parentId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Note",
-        default: null
-    },
-    position: {
-        type: Number,
-        default: 0
-    }
-  },
-  {timestamps: true}//this will automatically add createdAt and updatedAt fields
+    { timestamps: true }
 );
 
 const Note = mongoose.model("Note", noteSchema);
