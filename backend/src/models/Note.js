@@ -1,12 +1,19 @@
 import mongoose from "mongoose";
 
-//1-create schema
-//2-create model
-//3-export model
-const noteSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true
+const noteSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: [true, "Title is required"],
+            trim: true,
+            maxlength: [100, "Title cannot exceed 100 characters"],
+        },
+        content: {
+            type: String,
+            required: [true, "Content is required"],
+            trim: true,
+            maxlength: [5000, "Content cannot exceed 5000 characters"],
+        },
     },
     content: {
         type: String,
@@ -25,9 +32,24 @@ const noteSchema = new mongoose.Schema({
         type: Number,
         default: 0
     }
-  },
-  {timestamps: true}//this will automatically add createdAt and updatedAt fields
 );
+
+
+// Pre-hook to enforce validation on update operations
+noteSchema.pre("findOneAndUpdate", function () {
+    const update = this.getUpdate();
+    if (!update) return;
+
+    const $set = update.$set ?? update;
+    if (typeof $set.title === "string") $set.title = $set.title.trim();
+    if (typeof $set.content === "string") $set.content = $set.content.trim();
+
+    if (update.$set) update.$set = $set;
+
+    this.setUpdate(update);
+    this.setOptions({ runValidators: true, context: "query" });
+});
+
 
 const Note = mongoose.model("Note", noteSchema);
 

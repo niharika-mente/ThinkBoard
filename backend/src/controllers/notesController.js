@@ -66,11 +66,20 @@ export async function createNote(req, res) {
     } catch (error) {
         console.error("Error in createNote controller:", error);
 
+        if (error instanceof mongoose.Error.ValidationError) {
+            return res.status(400).json({
+                message: "Validation failed",
+                errors: Object.values(error.errors).map(
+                    (err) => err.message
+                ),
+            });
+        }
         res.status(500).json({
             message: "Internal server error",
         });
     }
 }
+
 
 export async function updateNote(req, res) {
     try {
@@ -113,10 +122,19 @@ export async function updateNote(req, res) {
     } catch (error) {
         console.error("Error in updateNote controller:", error);
 
+        
+        if (error instanceof mongoose.Error.ValidationError) {
+            return res.status(400).json({
+                message: "Validation failed",
+                errors: Object.values(error.errors).map(
+                    (err) => err.message
+                ),
+            });
+        }
         res.status(500).json({
             message: "Internal server error",
         });
-    }
+   }
 }
 
 export async function deleteNote(req, res) {
