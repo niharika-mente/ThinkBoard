@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5001/api";
+const API_URL = "http://localhost:5000/api"; // ✅ 5000 karein (5001 nahi)
 
 const api = axios.create({
   baseURL: API_URL,
@@ -22,4 +22,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-
