@@ -13,6 +13,26 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Enforce a strong password policy on the client (mirrors the backend rules).
+  const validatePassword = (pwd) => {
+    if (pwd.length < 8) {
+      return "Password must be at least 8 characters long";
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return "Password must contain at least one uppercase letter";
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return "Password must contain at least one lowercase letter";
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return "Password must contain at least one number";
+    }
+    if (!/[^A-Za-z0-9]/.test(pwd)) {
+      return "Password must contain at least one special character";
+    }
+    return "";
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -36,8 +56,9 @@ const Signup = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
       setLoading(false);
       return;
     }
@@ -50,14 +71,9 @@ const Signup = () => {
         setError("Registration failed. Please try again.");
       }
     } catch (err) {
-      const statusCode = err.response?.status;
-      if (statusCode === 400) {
-        setError("User already exists. Please login instead.");
-      } else if (statusCode === 500) {
-        setError("Server error. Please try again later.");
-      } else {
-        setError(err.response?.data?.error || "Registration failed");
-      }
+      // Prefer the specific message returned by the backend (e.g. duplicate
+      // email or password-policy failures); fall back to a generic message.
+      setError(err.response?.data?.error || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -122,7 +138,7 @@ const Signup = () => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12 transition-colors"
               required
-              minLength={6}
+              minLength={8}
             />
             <button
               type="button"
@@ -132,7 +148,9 @@ const Signup = () => {
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">Password must be at least 6 characters</p>
+          <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+            Must be 8+ characters with uppercase, lowercase, number &amp; special character
+          </p>
         </div>
 
         <button

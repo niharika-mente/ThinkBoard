@@ -37,16 +37,11 @@ const Login = () => {
         setError("Login failed. Please check your credentials.");
       }
     } catch (err) {
-      const statusCode = err.response?.status;
       const errorMsg = err.response?.data?.error;
 
-      if (statusCode === 401) {
-        setError("Invalid email or password. Please try again.");
-      } else if (statusCode === 404) {
-        setError(" Account not found. Please sign up first.");
-      } else if (statusCode === 500) {
-        setError(" Server error. Please try again later.");
-      } else if (errorMsg) {
+      // Prefer the specific message returned by the backend (e.g. unregistered
+      // email vs. wrong password); fall back to a generic message otherwise.
+      if (errorMsg) {
         setError(errorMsg);
       } else {
         setError("Login failed. Please check your credentials.");

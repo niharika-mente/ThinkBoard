@@ -36,31 +36,25 @@ export const AuthProvider = ({ children }) => {
   }, []);  
 
   const register = async (userData) => {
-    try {
-      const response = await api.post("/auth/register", userData);
-      if (response.data.success) {
-        setUser(response.data.user);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Register API error:", error);
-      return false;
+    // Errors are intentionally re-thrown so the calling page can read
+    // the specific message returned by the backend.
+    const response = await api.post("/auth/register", userData);
+    if (response.data.success) {
+      setUser(response.data.user);
+      return true;
     }
+    return false;
   };
 
   const login = async (userData) => {
-    try {
-      const response = await api.post("/auth/login", userData);
-      if (response.data.success) {
-        setUser(response.data.user);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Login API error:", error);
-      return false;
+    // Errors are intentionally re-thrown so the calling page can read
+    // the specific message returned by the backend.
+    const response = await api.post("/auth/login", userData);
+    if (response.data.success) {
+      setUser(response.data.user);
+      return true;
     }
+    return false;
   };
 
   const logout = async () => {
