@@ -17,6 +17,7 @@ import { connectRedis } from "./config/redis.js";
 
 // Middleware
 import rateLimiter from "./middleware/rateLimiter.js";
+import helmetMiddleware from "./middleware/helmetMiddleware.js";
 
 // ==================== CONFIGURATION ====================
 dotenv.config();
@@ -47,7 +48,7 @@ if (process.env.NODE_ENV !== "production") {
 // Body parsing middleware
 app.use(express.json());
 app.use(cookieParser());
-
+app.use(helmetMiddleware);
 // Optional auth to populate req.user for rateLimiter
 const optionalAuthenticateUser = (req, res, next) => {
   try {
