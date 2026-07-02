@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { SearchIcon, XIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import RateLimitedUI from "../components/RateLimitedUI";
 import api from "../lib/axios";
@@ -15,6 +16,7 @@ const HomePage = () => {
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Drag & drop state
   const [activeDragId, setActiveDragId] = useState(null);
@@ -27,6 +29,16 @@ const HomePage = () => {
 
   // Top-level notes (not grouped under another note)
   const topLevelNotes = notes.filter((n) => !n.groupId);
+
+  // Filter top-level notes by title/content (case-insensitive substring match)
+  const query = searchQuery.trim().toLowerCase();
+  const filteredNotes = topLevelNotes.filter((n) => {
+    if (!query) return true;
+    return (
+      n.title?.toLowerCase().includes(query) ||
+      n.content?.toLowerCase().includes(query)
+    );
+  });
 
   const fetchNotes = async () => {
     try {
@@ -146,21 +158,63 @@ const HomePage = () => {
         {!loading && notes.length === 0 && !isRateLimited && <NotesNotFound />}
 
         {!loading && notes.length > 0 && !isRateLimited && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            {topLevelNotes.map((note) => (
-              <NoteCard
-                key={note._id}
-                note={note}
-                setNotes={setNotes}
-                allNotes={notes}
-                activeDragId={activeDragId}
-                setActiveDragId={setActiveDragId}
-                onMoveNote={handleMoveNote}
-                onCombineNotes={handleCombineNotes}
-                onReorderNotes={handleReorderNotes}
-              />
-            ))}
-          </div>
+          <>
+            {/* Search / filter notes */}
+            <div className="mb-6">
+              <div className="relative max-w-md">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400 dark:text-gray-500 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search notes by title or content..."
+                  aria-label="Search notes"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  >
+                    <XIcon className="size-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {filteredNotes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+                {filteredNotes.map((note) => (
+                  <NoteCard
+                    key={note._id}
+                    note={note}
+                    setNotes={setNotes}
+                    allNotes={notes}
+                    activeDragId={activeDragId}
+                    setActiveDragId={setActiveDragId}
+                    onMoveNote={handleMoveNote}
+                    onCombineNotes={handleCombineNotes}
+                    onReorderNotes={handleReorderNotes}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 space-y-4 max-w-md mx-auto text-center">
+                <div className="bg-gray-100 dark:bg-gray-800 rounded-full p-6">
+                  <SearchIcon className="size-12 text-gray-400 dark:text-gray-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  No notes match your search
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No notes found for &ldquo;{searchQuery}&rdquo;. Try a different
+                  keyword or clear the search to see all notes.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
