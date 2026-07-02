@@ -17,6 +17,7 @@ import { connectRedis } from "./config/redis.js";
 
 // Middleware
 import rateLimiter from "./middleware/rateLimiter.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 // ==================== CONFIGURATION ====================
 dotenv.config();
@@ -88,13 +89,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // ==================== ERROR HANDLING ====================
-app.use((err, req, res, next) => {
-  console.error("Error:", err.message);
-  res.status(500).json({
-    error: "Internal server error",
-    message: process.env.NODE_ENV === "development" ? err.message : undefined,
-  });
-});
+app.use(errorHandler);;
 
 // ==================== START SERVER ====================
 const startServer = async () => {
