@@ -1,12 +1,31 @@
-
-import { PenSquareIcon, Trash2Icon } from "lucide-react";
+import { useState } from "react";
+import { PenSquareIcon, Trash2Icon, FolderIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDate } from "../lib/utils";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
 
-const NoteCard = ({ note, setNotes }) => {
+const NoteCard = ({
+  note,
+  setNotes,
+  allNotes = [],
+  activeDragId,
+  setActiveDragId,
+  onMoveNote,
+  onCombineNotes,
+  onReorderNotes,
+}) => {
   const navigate = useNavigate();
+
+  // "before" | "after" | "stack" | null — where a dragged note would land.
+  const [dragIndicator, setDragIndicator] = useState(null);
+
+  // Child notes belonging to this group, in persisted order.
+  const children = note.isGroup
+    ? allNotes
+        .filter((n) => String(n.parentId) === String(note._id))
+        .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    : [];
 
   const handleDelete = async (e, id) => {
     e.preventDefault();
@@ -25,6 +44,7 @@ const NoteCard = ({ note, setNotes }) => {
   };
 
   const handleDragStart = (e) => {
+    e.stopPropagation();
     e.dataTransfer.setData("text/plain", note._id);
     e.dataTransfer.effectAllowed = "move";
 
@@ -69,88 +89,183 @@ const NoteCard = ({ note, setNotes }) => {
   const handleDragEnd = () => {
     setActiveDragId(null);
     setDragIndicator(null);
-    setChildDragIndicator(null);
   };
 
   const handleDragOver = (e) => {
-    if (activeDragId === note._id) return; // Cannot drop on itself
+    if (!activeDragId || activeDragId === note._id) return; // nothing dragging, or dropping on itself
 
+    // Don't allow dropping a note back onto its own group container.
     if (note.isGroup) {
-      // Don't drag children into their current parent
       const childrenIds = allNotes
-        .filter((n) => n.parentId === note._id)
+        .filter((n) => String(n.parentId) === String(note._id))
         .map((n) => n._id);
       if (childrenIds.includes(activeDragId)) return;
     }
 
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
     setDragIndicator(getDragIndicatorFromPoint(e.clientX, e.clientY, e.currentTarget));
+  };
+
+  const handleDragLeave = () => {
+    setDragIndicator(null);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const draggedId = e.dataTransfer.getData("text/plain");
+    const indicator = getDragIndicatorFromPoint(e.clientX, e.clientY, e.currentTarget);
+    setDragIndicator(null);
+    setActiveDragId(null);
+
+    if (!draggedId || draggedId === note._id) return;
+
+    if (indicator === "stack") {
+      if (note.isGroup) {
+        // Move the dragged note into this existing group.
+        onReorderNotes(note._id, draggedId, null);
+      } else if (!note.parentId) {
+        // Combine two top-level notes into a new named group.
+        onCombineNotes(draggedId, note._id);
+      } else {
+        // Stacking onto a grouped note simply reorders within that group.
+        onReorderNotes(note.parentId, draggedId, note._id);
+      }
+      return;
+    }
+
+    // "before" / "after": reorder relative to this note.
+    if (note.parentId) {
+      onReorderNotes(note.parentId, draggedId, note._id);
+    } else {
+      onMoveNote(draggedId, note._id);
+    }
   };
 
   const handleEdit = (e, id) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/note/${id}`); 
+    navigate(`/note/${id}`);
   };
 
+  const stackHighlight = dragIndicator === "stack" ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900" : "";
+
   return (
-    <div className="group relative">
-      <Link
-        to={`/note/${note._id}`}
-        className="block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-800"
-      >
-        {/* Gradient Top Bar */}
-        <div className="h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-        
-        <div className="p-5">
-          {/* Title */}
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-            {note.title || "Untitled"}
-          </h3>
-          
-          {/* Content Preview */}
-          <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-3 mb-4 leading-relaxed">
-            {note.content || "No content"}
-          </p>
-          
-          {/* Footer */}
-          <div className="flex items-center justify-between mt-2">
-            {/* Date */}
-            <div className="flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                {formatDate(new Date(note.createdAt))}
-              </span>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              {/* Edit Button */}
-              <button
-                className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950"
-                onClick={(e) => handleEdit(e, note._id)}
-                aria-label="Edit note"
-                title="Edit"
-              >
-                <PenSquareIcon size={16} />
-              </button>
-              
-              {/* Delete Button */}
-              <button
-                className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-950"
-                onClick={(e) => handleDelete(e, note._id)}
-                aria-label="Delete note"
-                title="Delete"
-              >
-                <Trash2Icon size={16} />
-              </button>
-            </div>
+    <div
+      className={`group relative rounded-xl transition-all duration-200 ${stackHighlight} ${
+        activeDragId === note._id ? "opacity-50" : ""
+      }`}
+      draggable
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+    >
+      {/* Before / after drop indicators */}
+      {dragIndicator === "before" && (
+        <div className="absolute -left-2 top-0 bottom-0 w-1 rounded bg-blue-500" />
+      )}
+      {dragIndicator === "after" && (
+        <div className="absolute -right-2 top-0 bottom-0 w-1 rounded bg-blue-500" />
+      )}
+
+      {note.isGroup ? (
+        // ==================== GROUP CARD ====================
+        <div className="block bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+          <div className="p-5">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
+              <FolderIcon size={18} className="text-blue-500" />
+              {note.title || "Untitled group"}
+              <span className="text-xs font-normal text-gray-400">({children.length})</span>
+            </h3>
+
+            {children.length > 0 ? (
+              <div className="space-y-2">
+                {children.map((child) => (
+                  <NoteCard
+                    key={child._id}
+                    note={child}
+                    setNotes={setNotes}
+                    allNotes={allNotes}
+                    activeDragId={activeDragId}
+                    setActiveDragId={setActiveDragId}
+                    onMoveNote={onMoveNote}
+                    onCombineNotes={onCombineNotes}
+                    onReorderNotes={onReorderNotes}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 dark:text-gray-500">
+                Drop a note here to add it to this group.
+              </p>
+            )}
           </div>
         </div>
-      </Link>
+      ) : (
+        // ==================== NOTE CARD ====================
+        <Link
+          to={`/note/${note._id}`}
+          draggable={false}
+          className="block bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-800"
+        >
+          {/* Gradient Top Bar */}
+          <div className="h-1.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+
+          <div className="p-5">
+            {/* Title */}
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {note.title || "Untitled"}
+            </h3>
+
+            {/* Content Preview */}
+            <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-3 mb-4 leading-relaxed">
+              {note.content || "No content"}
+            </p>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between mt-2">
+              {/* Date */}
+              <div className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  {formatDate(new Date(note.createdAt))}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {/* Edit Button */}
+                <button
+                  className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950"
+                  onClick={(e) => handleEdit(e, note._id)}
+                  aria-label="Edit note"
+                  title="Edit"
+                >
+                  <PenSquareIcon size={16} />
+                </button>
+
+                {/* Delete Button */}
+                <button
+                  className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-950"
+                  onClick={(e) => handleDelete(e, note._id)}
+                  aria-label="Delete note"
+                  title="Delete"
+                >
+                  <Trash2Icon size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </Link>
+      )}
     </div>
   );
 };
