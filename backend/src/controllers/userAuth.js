@@ -9,11 +9,22 @@ export const register = async (req, res) => {
     Validate(req.body);
     const { name, email, password } = req.body;
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "This email is already registered. Please sign in or use a different email address.",
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
     });
 
@@ -40,6 +51,16 @@ export const register = async (req, res) => {
     });
   } catch (err) {
     console.log("FULL ERROR:", err);
+
+    // Handle duplicate email (race condition / unique index violation)
+    if (err.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "This email is already registered. Please sign in or use a different email address.",
+      });
+    }
+
     res.status(400).json({
       success: false,
       error: err.message,
@@ -53,17 +74,30 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw new Error("Invalid Credentials");
+      return res.status(400).json({
+        success: false,
+        error: "Please enter both email and password.",
+      });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
 
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error:
+          "This email address is not registered. Please create an account first.",
+      });
+    }
 
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
-      throw new Error("Invalid Credentials");
+      return res.status(401).json({
+        success: false,
+        error: "Invalid email or password. Please try again.",
+      });
     }
 
     const token = jwt.sign(
@@ -88,7 +122,11 @@ export const login = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(401).json({ error: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({
+      success: false,
+      error: "Server error. Please try again later.",
+    });
   }
 };
 
