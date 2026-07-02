@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import Note from "../models/Note.js";
 
+// Maximum allowed lengths for a note's fields (must match the Note model).
+const TITLE_MAX_LENGTH = 100;
+const CONTENT_MAX_LENGTH = 10000;
+
 export async function getAllNotes(req, res) {
     try {
         const notes = await Note.find({ userId: req.user._id }).sort({ createdAt: -1 });
@@ -55,6 +59,13 @@ export async function createNote(req, res) {
             return res.status(400).json({ message: "Title and content are required" });
         }
 
+        if (title.trim().length > TITLE_MAX_LENGTH) {
+            return res.status(400).json({ message: `Title cannot exceed ${TITLE_MAX_LENGTH} characters` });
+        }
+        if (content.trim().length > CONTENT_MAX_LENGTH) {
+            return res.status(400).json({ message: `Content cannot exceed ${CONTENT_MAX_LENGTH} characters` });
+        }
+
         const note = new Note({
             userId: req.user._id,
             title: title.trim(),
@@ -90,7 +101,13 @@ export async function updateNote(req, res) {
         if (!title.trim() || !content.trim()) {
             return res.status(400).json({ message: "Title and content are required" });
         }
-     
+
+        if (title.trim().length > TITLE_MAX_LENGTH) {
+            return res.status(400).json({ message: `Title cannot exceed ${TITLE_MAX_LENGTH} characters` });
+        }
+        if (content.trim().length > CONTENT_MAX_LENGTH) {
+            return res.status(400).json({ message: `Content cannot exceed ${CONTENT_MAX_LENGTH} characters` });
+        }
 
         const updatedNote = await Note.findOneAndUpdate(
             { _id: id, userId: req.user._id },

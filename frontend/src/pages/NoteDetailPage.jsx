@@ -4,6 +4,9 @@ import api from "../lib/axios";
 import toast from "react-hot-toast";
 import { ArrowLeftIcon, LoaderIcon, Trash2Icon } from "lucide-react";
 
+const TITLE_MAX_LENGTH = 100;
+const CONTENT_MAX_LENGTH = 10000;
+
 const NoteDetailPage = () => {
   const [note, setNote] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -121,10 +124,14 @@ const NoteDetailPage = () => {
                 <input
                   type="text"
                   placeholder="Note title"
+                  maxLength={TITLE_MAX_LENGTH}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                   value={note.title}
                   onChange={(e) => setNote({ ...note, title: e.target.value })}
                 />
+                <p className="mt-1 text-right text-xs text-gray-400 dark:text-gray-500">
+                  {(note.title?.length ?? 0)}/{TITLE_MAX_LENGTH}
+                </p>
               </div>
 
               {/* Content Textarea */}
@@ -135,10 +142,14 @@ const NoteDetailPage = () => {
                 <textarea
                   placeholder="Write your note here..."
                   rows={10}
+                  maxLength={CONTENT_MAX_LENGTH}
                   className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors resize-none"
                   value={note.content}
                   onChange={(e) => setNote({ ...note, content: e.target.value })}
                 />
+                <p className="mt-1 text-right text-xs text-gray-400 dark:text-gray-500">
+                  {(note.content?.length ?? 0)}/{CONTENT_MAX_LENGTH}
+                </p>
               </div>
 
               {/* Save Button */}

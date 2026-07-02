@@ -5,6 +5,9 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/axios";
 
+const TITLE_MAX_LENGTH = 100;
+const CONTENT_MAX_LENGTH = 10000;
+
 const CreatePage = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -72,10 +75,14 @@ const CreatePage = () => {
                   <input
                     type="text"
                     placeholder="Note Title"
+                    maxLength={TITLE_MAX_LENGTH}
                     className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
+                  <p className="mt-1 text-right text-xs text-gray-400 dark:text-gray-500">
+                    {title.length}/{TITLE_MAX_LENGTH}
+                  </p>
                 </div>
 
                 {/* Content Textarea */}
@@ -86,10 +93,14 @@ const CreatePage = () => {
                   <textarea
                     placeholder="Write your note here..."
                     rows={8}
+                    maxLength={CONTENT_MAX_LENGTH}
                     className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                   />
+                  <p className="mt-1 text-right text-xs text-gray-400 dark:text-gray-500">
+                    {content.length}/{CONTENT_MAX_LENGTH}
+                  </p>
                 </div>
 
                 {/* Submit Button */}

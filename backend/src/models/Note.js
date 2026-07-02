@@ -12,11 +12,14 @@ const noteSchema = new mongoose.Schema({
     },
     title: {
         type: String,
-        required: true
+        required: true,
+        trim: true,
+        maxlength: [100, "Title cannot exceed 100 characters"]
     },
     content: {
         type: String,
-        default: ""
+        default: "",
+        maxlength: [10000, "Content cannot exceed 10000 characters"]
     },
     isGroup: {
         type: Boolean,
