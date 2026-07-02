@@ -1,5 +1,5 @@
 import express from "express";
-import { getAllNotes, getNoteById, createNote, updateNote, deleteNote } from "../controllers/notesController.js";
+import { getAllNotes, getNoteById, createNote, updateNote, deleteNote, reorderNote, createGroup } from "../controllers/notesController.js";
 import { authenticateUser } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -12,6 +12,10 @@ router.get("/", getAllNotes);
 router.get("/:id", getNoteById);
 
 router.post("/", createNote);
+
+router.post("/group", createGroup);
+
+router.patch("/:id/reorder", reorderNote);
 
 router.put("/:id", updateNote);
 

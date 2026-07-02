@@ -26,7 +26,7 @@ const HomePage = () => {
   const [groupTitle, setGroupTitle] = useState("");
 
   // Top-level notes (not grouped under another note)
-  const topLevelNotes = notes.filter((n) => !n.groupId);
+  const topLevelNotes = notes.filter((n) => !n.parentId);
 
   const fetchNotes = async () => {
     try {
@@ -59,25 +59,14 @@ const HomePage = () => {
     return null;
   }
 
-  // Move a note to a new position
+  // Move a top-level note to a new position (before/after the target).
   const handleMoveNote = async (draggedId, targetId) => {
-    const oldNotes = [...notes];
-    const dragged = notes.find((n) => n._id === draggedId);
-    const target = notes.find((n) => n._id === targetId);
-    if (!dragged || !target) return;
-
-    const newNotes = notes.filter((n) => n._id !== draggedId);
-    const targetIndex = newNotes.findIndex((n) => n._id === targetId);
-    newNotes.splice(targetIndex, 0, dragged);
-    setNotes(newNotes);
-
     try {
-      await api.patch(`/notes/${draggedId}/reorder`, { targetId });
-      toast.success("Note reordered");
+      const res = await api.patch(`/notes/${draggedId}/reorder`, { targetId });
+      setNotes(res.data);
     } catch (error) {
       console.error("Error saving note position:", error);
       toast.error("Failed to save reordered note");
-      setNotes(oldNotes);
     }
   };
 
@@ -92,40 +81,35 @@ const HomePage = () => {
   const handleCreateGroup = async () => {
     if (!groupTitle.trim()) return;
     try {
-      await api.post("/notes/group", {
+      const res = await api.post("/notes/group", {
         sourceId: modalSourceId,
         targetId: modalTargetId,
-        title: groupTitle,
+        title: groupTitle.trim(),
       });
-      toast.success(`Group "${groupTitle}" created!`);
+      setNotes(res.data);
+      toast.success(`Group "${groupTitle.trim()}" created!`);
       setShowNamingModal(false);
       setGroupTitle("");
       setModalSourceId(null);
       setModalTargetId(null);
-      fetchNotes();
     } catch (error) {
       console.error("Error creating group:", error);
       toast.error("Failed to create group");
     }
   };
 
-  // Reorder notes within a group
+  // Reorder a note within a group, or move it into a group (parentId = groupId).
+  // targetId is the note to position next to, or null to append to the group.
   const handleReorderNotes = async (groupId, draggedId, targetId) => {
-    const oldNotes = [...notes];
-    const dragged = notes.find((n) => n._id === draggedId);
-    if (!dragged) return;
-
-    const newNotes = notes.filter((n) => n._id !== draggedId);
-    const targetIndex = newNotes.findIndex((n) => n._id === targetId);
-    newNotes.splice(targetIndex, 0, dragged);
-    setNotes(newNotes);
-
     try {
-      await api.patch(`/notes/${draggedId}/reorder`, { targetId, groupId });
+      const res = await api.patch(`/notes/${draggedId}/reorder`, {
+        targetId: targetId ?? null,
+        parentId: groupId,
+      });
+      setNotes(res.data);
     } catch (error) {
       console.error("Error reordering within group:", error);
       toast.error("Failed to reorder note");
-      setNotes(oldNotes);
     }
   };
 
