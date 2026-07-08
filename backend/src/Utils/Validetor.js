@@ -4,8 +4,8 @@ import validator from "validator"
  const Validate = (data) => {
   const { name, email, password } = data;
   
-  if (!name || !email || !password) {
-    throw new Error("Some Field Missing");
+  if (typeof name !== "string" || typeof email !== "string" || typeof password !== "string") {
+    throw new Error("Invalid field type");
   }
   
   // Optional: Email validation
