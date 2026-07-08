@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
       return false;
     } catch (error) {
       console.error("Register API error:", error);
-      return false;
+      throw error;
     }
   };
 
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
       return false;
     } catch (error) {
       console.error("Login API error:", error);
-      return false;
+      throw error;
     }
   };
 
