@@ -9,7 +9,7 @@ export const register = async (req, res) => {
     Validate(req.body);
     const { name, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: String(email) });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -60,11 +60,11 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (typeof email !== "string" || typeof password !== "string") {
       throw new Error("Invalid Credentials");
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: String(email) });
 
     if (!user) throw new Error("User not found");
 
