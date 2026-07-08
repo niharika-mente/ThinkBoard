@@ -5,7 +5,15 @@ import { formatDate } from "../lib/utils";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
 
-const NoteCard = ({ note, setNotes }) => {
+const NoteCard = ({
+  note,
+  setNotes,
+  allNotes = [],
+  activeDragId = null,
+  setActiveDragId = () => {},
+  setDragIndicator = () => {},
+  setChildDragIndicator = () => {},
+}) => {
   const navigate = useNavigate();
 
   const handleDelete = async (e, id) => {
