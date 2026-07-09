@@ -153,9 +153,13 @@ export async function deleteNote(req, res) {
             });
         }
 
+        // Delete all child notes grouped under this note to prevent leaving them orphaned
+        await Note.deleteMany({ parentId: id, userId: req.user._id });
+
         res.status(200).json({
             message: "Note deleted successfully",
         });
+
     } catch (error) {
         console.error("Error in deleteNote controller:", error);
 
