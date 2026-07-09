@@ -41,8 +41,8 @@ const NoteDetailPage = () => {
   };
 
   const handleSave = async () => {
-    if (!note.title.trim() || !note.content.trim()) {
-      toast.error("Please add a title or content");
+    if (!note.title.trim()) {
+      toast.error("Title is required");
       return;
     }
 
