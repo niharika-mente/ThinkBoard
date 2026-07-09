@@ -32,8 +32,16 @@ const noteSchema = new mongoose.Schema({
         default: 0
     }
   },
-  {timestamps: true}//this will automatically add createdAt and updatedAt fields
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
+
+noteSchema.virtual("groupId").get(function () {
+    return this.parentId;
+});
 
 const Note = mongoose.model("Note", noteSchema);
 
