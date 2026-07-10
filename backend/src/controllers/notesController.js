@@ -60,8 +60,8 @@ export async function createNote(req, res) {
             return res.status(400).json({ message: "Title and content must be strings" });
         }
 
-        if (!title.trim() || !content.trim()) {
-            return res.status(400).json({ message: "Title and content are required" });
+        if (!title.trim()) {
+            return res.status(400).json({ message: "Title is required" });
         }
 
         const note = new Note({
@@ -99,8 +99,8 @@ export async function updateNote(req, res) {
         if (typeof title !== "string" || typeof content !== "string") {
             return res.status(400).json({ message: "Title and content must be strings" });
         }
-        if (!title.trim() || !content.trim()) {
-            return res.status(400).json({ message: "Title and content are required" });
+        if (!title.trim()) {
+            return res.status(400).json({ message: "Title is required" });
         }
      
 
