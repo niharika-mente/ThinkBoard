@@ -63,8 +63,8 @@ const optionalAuthenticateUser = (req, res, next) => {
 };
 
 // Rate limiting and optional auth applied only to API routes
-app.use("/api", rateLimiter);
 app.use("/api", optionalAuthenticateUser);
+app.use("/api", rateLimiter);
 
 // ==================== ROUTES ====================
 app.use("/api/notes", notesRoutes);
