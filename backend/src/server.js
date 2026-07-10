@@ -51,7 +51,12 @@ app.use(cookieParser());
 // Optional auth to populate req.user for rateLimiter
 const optionalAuthenticateUser = (req, res, next) => {
   try {
-    const token = req.cookies?.token;
+    let token = req.cookies?.token;
+
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded;
