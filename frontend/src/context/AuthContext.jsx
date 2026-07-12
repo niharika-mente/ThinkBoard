@@ -39,11 +39,11 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await api.post("/auth/register", userData);
-      if (response.data.success) {
-        setUser(response.data.user);
-        return true;
+      if (!response.data?.success || !response.data?.user) {
+        throw new Error(response.data?.error || "Registration failed");
       }
-      return false;
+      setUser(response.data.user);
+      return response.data.user;
     } catch (error) {
       console.error("Register API error:", error);
       throw error;
@@ -53,11 +53,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (userData) => {
     try {
       const response = await api.post("/auth/login", userData);
-      if (response.data.success) {
-        setUser(response.data.user);
-        return true;
+      if (!response.data?.success || !response.data?.user) {
+        throw new Error(response.data?.error || "Login failed");
       }
-      return false;
+      setUser(response.data.user);
+      return response.data.user;
     } catch (error) {
       console.error("Login API error:", error);
       throw error;
