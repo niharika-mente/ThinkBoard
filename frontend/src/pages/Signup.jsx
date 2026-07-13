@@ -43,21 +43,11 @@ const Signup = () => {
     }
 
     try {
-      const success = await register({ name, email, password });
-      if (success) {
-        navigate("/home");
-      } else {
-        setError("Registration failed. Please try again.");
-      }
+      await register({ name, email, password });
+      navigate("/home");
     } catch (err) {
-      const statusCode = err.response?.status;
-      if (statusCode === 400) {
-        setError("User already exists. Please login instead.");
-      } else if (statusCode === 500) {
-        setError("Server error. Please try again later.");
-      } else {
-        setError(err.response?.data?.error || "Registration failed");
-      }
+      const errorMsg = err.response?.data?.error || err.message;
+      setError(errorMsg || "Registration failed");
     } finally {
       setLoading(false);
     }
