@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { formatDate } from "../lib/utils";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
+import TagBadge from "./TagBadge";
 
 const NoteCard = ({
   note,
@@ -118,9 +119,18 @@ const NoteCard = ({
           </h3>
           
           {/* Content Preview */}
-          <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-3 mb-4 leading-relaxed">
+          <p className="text-gray-500 dark:text-gray-400 text-sm line-clamp-3 mb-3 leading-relaxed">
             {note.content || "No content"}
           </p>
+
+          {/* Tags */}
+          {note.tags && note.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {note.tags.map((tag) => (
+                <TagBadge key={tag} tag={tag} />
+              ))}
+            </div>
+          )}
           
           {/* Footer */}
           <div className="flex items-center justify-between mt-2">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import RateLimitedUI from "../components/RateLimitedUI";
@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import NoteCard from "../components/NoteCard";
 import NoteCardSkeleton from "../components/NoteCardSkeleton";
 import NotesNotFound from "../components/NotesNotFound";
+import SearchBar from "../components/SearchBar";
+import TagFilter from "../components/TagFilter";
 import { useAuth } from "../context/AuthContext";
 
 const HomePage = () => {
@@ -15,6 +17,12 @@ const HomePage = () => {
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceTimer = useRef(null);
 
   // Drag & drop state
   const [activeDragId, setActiveDragId] = useState(null);
@@ -25,12 +33,32 @@ const HomePage = () => {
   const [modalTargetId, setModalTargetId] = useState(null);
   const [groupTitle, setGroupTitle] = useState("");
 
+  // Debounce search input
+  useEffect(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [searchQuery]);
+
   // Top-level notes (not grouped under another note)
   const topLevelNotes = notes.filter((n) => !n.groupId);
 
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
-      const res = await api.get("/notes");
+      const params = {};
+      if (debouncedSearch.trim()) {
+        params.search = debouncedSearch.trim();
+      }
+      if (selectedTag) {
+        params.tag = selectedTag;
+      }
+      const res = await api.get("/notes", { params });
       setNotes(res.data);
       setIsRateLimited(false);
     } catch (error) {
@@ -43,7 +71,7 @@ const HomePage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, selectedTag]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -53,7 +81,17 @@ const HomePage = () => {
     if (user) {
       fetchNotes();
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, fetchNotes]);
+
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
+    setLoading(true);
+  };
+
+  const handleSelectTag = (tag) => {
+    setSelectedTag(tag);
+    setLoading(true);
+  };
 
   if (authLoading || !user) {
     return null;
@@ -133,6 +171,41 @@ const HomePage = () => {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
       <div className="max-w-7xl mx-auto p-4 mt-6">
+        {/* Search & Filter Toolbar */}
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <SearchBar value={searchQuery} onChange={handleSearchChange} />
+          </div>
+          <TagFilter selectedTag={selectedTag} onSelectTag={handleSelectTag} />
+        </div>
+
+        {/* Active filter indicator */}
+        {(debouncedSearch || selectedTag) && !loading && (
+          <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+            Showing {notes.length} result{notes.length !== 1 ? "s" : ""}
+            {debouncedSearch && (
+              <span>
+                {" "}for "<span className="font-medium text-gray-700 dark:text-gray-300">{debouncedSearch}</span>"
+              </span>
+            )}
+            {selectedTag && (
+              <span>
+                {" "}with tag <span className="font-medium text-blue-600 dark:text-blue-400">#{selectedTag}</span>
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedTag(null);
+                setLoading(true);
+              }}
+              className="ml-2 text-blue-600 dark:text-blue-400 hover:underline text-xs"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
+
         {isRateLimited && <RateLimitedUI onRetry={() => window.location.reload()} />}
 
         {loading && (
@@ -143,7 +216,9 @@ const HomePage = () => {
           </div>
         )}
 
-        {!loading && notes.length === 0 && !isRateLimited && <NotesNotFound />}
+        {!loading && notes.length === 0 && !isRateLimited && (
+          <NotesNotFound isFiltered={!!(debouncedSearch || selectedTag)} />
+        )}
 
         {!loading && notes.length > 0 && !isRateLimited && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">

@@ -18,6 +18,11 @@ const noteSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    tags: {
+        type: [String],
+        default: [],
+        index: true
+    },
     isGroup: {
         type: Boolean,
         default: false

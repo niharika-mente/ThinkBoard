@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
-import { ArrowLeftIcon, LoaderIcon, Trash2Icon } from "lucide-react";
+import { ArrowLeftIcon, LoaderIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import TagBadge from "../components/TagBadge";
 
 const NoteDetailPage = () => {
   const [note, setNote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tagInput, setTagInput] = useState("");
 
   const navigate = useNavigate();
   const { id } = useParams();
@@ -52,6 +54,7 @@ const NoteDetailPage = () => {
       await api.put(`/notes/${id}`, {
         title: note.title,
         content: note.content,
+        tags: note.tags || [],
       });
       toast.success("Note updated successfully");
       navigate("/");
@@ -61,6 +64,35 @@ const NoteDetailPage = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddTag = () => {
+    const trimmed = tagInput.trim().toLowerCase();
+    if (!trimmed) return;
+    if ((note.tags || []).includes(trimmed)) {
+      toast.error("Tag already added");
+      return;
+    }
+    if ((note.tags || []).length >= 10) {
+      toast.error("Maximum 10 tags allowed");
+      return;
+    }
+    setNote({ ...note, tags: [...(note.tags || []), trimmed] });
+    setTagInput("");
+  };
+
+  const handleTagKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setNote({
+      ...note,
+      tags: (note.tags || []).filter((t) => t !== tagToRemove),
+    });
   };
 
   if (loading) {
@@ -122,6 +154,43 @@ const NoteDetailPage = () => {
                   value={note.title}
                   onChange={(e) => setNote({ ...note, title: e.target.value })}
                 />
+              </div>
+
+              {/* Tags Section */}
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tags
+                </label>
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="text"
+                    placeholder="Add a tag and press Enter..."
+                    className="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    disabled={!tagInput.trim()}
+                    className="px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                  >
+                    <PlusIcon size={18} />
+                  </button>
+                </div>
+                {note.tags && note.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {note.tags.map((tag) => (
+                      <TagBadge
+                        key={tag}
+                        tag={tag}
+                        onRemove={handleRemoveTag}
+                        size="md"
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Content Textarea */}

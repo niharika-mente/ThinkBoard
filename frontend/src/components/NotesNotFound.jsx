@@ -1,7 +1,37 @@
-import { NotebookIcon } from "lucide-react";
+import { NotebookIcon, SearchXIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const NotesNotFound = () => {
+const NotesNotFound = ({ isFiltered = false }) => {
+  if (isFiltered) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 space-y-6 max-w-md mx-auto text-center">
+        {/* Icon Circle */}
+        <div className="bg-orange-50 dark:bg-orange-950 rounded-full p-6">
+          <SearchXIcon className="size-12 text-orange-500 dark:text-orange-400" />
+        </div>
+        
+        {/* Title */}
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+          No matching notes
+        </h3>
+        
+        {/* Description */}
+        <p className="text-gray-500 dark:text-gray-400">
+          Try adjusting your search query or clearing the filters to see all your notes.
+        </p>
+        
+        {/* Button */}
+        <Link
+          to="/create"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+        >
+          <NotebookIcon size={18} />
+          Create New Note
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center justify-center py-16 space-y-6 max-w-md mx-auto text-center">
       {/* Icon Circle */}
