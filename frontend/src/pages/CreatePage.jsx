@@ -1,16 +1,47 @@
-
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/axios";
+import TagBadge from "../components/TagBadge";
 
 const CreatePage = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  const handleAddTag = () => {
+    const trimmed = tagInput.trim().toLowerCase();
+    if (!trimmed) return;
+    if (tags.includes(trimmed)) {
+      toast.error("Tag already added");
+      return;
+    }
+    if (tags.length >= 10) {
+      toast.error("Maximum 10 tags allowed");
+      return;
+    }
+    setTags([...tags, trimmed]);
+    setTagInput("");
+  };
+
+  const handleTagKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddTag();
+    } else if (e.key === "," || e.key === "Tab") {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setTags(tags.filter((t) => t !== tagToRemove));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,6 +56,7 @@ const CreatePage = () => {
       await api.post("/notes", {
         title,
         content,
+        tags,
       });
 
       toast.success("Note created successfully!");
@@ -49,7 +81,7 @@ const CreatePage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* Back Button */}
-        
+         
            <Link to={"/"} className="btn btn-ghost mb-6">
              <ArrowLeftIcon className="size-5" />
              Back to Notes
@@ -76,6 +108,46 @@ const CreatePage = () => {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
+                </div>
+
+                {/* Tags Input */}
+                <div className="mb-5">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tags
+                  </label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      placeholder="Add a tag and press Enter..."
+                      className="flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={handleTagKeyDown}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddTag}
+                      disabled={!tagInput.trim()}
+                      className="px-3 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                    >
+                      <PlusIcon size={18} />
+                    </button>
+                  </div>
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => (
+                        <TagBadge
+                          key={tag}
+                          tag={tag}
+                          onRemove={handleRemoveTag}
+                          size="md"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+                    Press Enter or comma to add a tag. Maximum 10 tags.
+                  </p>
                 </div>
 
                 {/* Content Textarea */}
