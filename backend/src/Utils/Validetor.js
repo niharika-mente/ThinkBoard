@@ -15,9 +15,14 @@ import validator from "validator"
   }
   
   // Optional: Password length check
-  if (password.length < 6) {
-    throw new Error("Password must be at least 6 characters");
-  }
+  const strongPassword =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+if (!strongPassword.test(password)) {
+  throw new Error(
+    "Password must contain minimum 8 characters with uppercase, lowercase, number and special character"
+  );
+}
   
   return true;
 };
