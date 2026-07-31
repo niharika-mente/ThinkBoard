@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
 import { fileURLToPath } from "url";
 import dns from "dns";
 import jwt from "jsonwebtoken";
@@ -32,6 +34,9 @@ const __dirname = path.dirname(__filename);
 
 // ==================== MIDDLEWARE ====================
 
+// Security HTTP headers (X-Content-Type-Options, X-Frame-Options, HSTS, etc.)
+app.use(helmet());
+
 // CORS Configuration
 if (process.env.NODE_ENV !== "production") {
   app.use(
@@ -47,6 +52,10 @@ if (process.env.NODE_ENV !== "production") {
 // Body parsing middleware
 app.use(express.json());
 app.use(cookieParser());
+
+// Strip MongoDB operator keys ($ / .) from req.body, req.params and req.query
+// as a global defense-in-depth layer against NoSQL operator injection.
+app.use(mongoSanitize());
 
 // Optional auth to populate req.user for rateLimiter
 const optionalAuthenticateUser = (req, res, next) => {
