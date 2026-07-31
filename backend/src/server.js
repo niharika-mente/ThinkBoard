@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import cookieParser from "cookie-parser";
+import csurf from "csurf";
 import { fileURLToPath } from "url";
 import dns from "dns";
 import jwt from "jsonwebtoken";
@@ -49,15 +50,17 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CSRF Protection Middleware
+const csrfMiddleware = csurf({ cookie: { httpOnly: true, sameSite: "lax" }, ignoreMethods: ["GET", "HEAD", "OPTIONS"] });
 const csrfProtection = (req, res, next) => {
-  if (["POST", "PUT", "DELETE", "PATCH"].includes(req.method)) {
+  if (process.env.NODE_ENV !== "production" || req.headers.authorization?.startsWith("Bearer ")) {
     const origin = req.headers.origin || req.headers.referer;
     const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
-    if (origin && !origin.startsWith(allowedOrigin)) {
+    if (["POST", "PUT", "DELETE", "PATCH"].includes(req.method) && origin && !origin.startsWith(allowedOrigin)) {
       return res.status(403).json({ message: "CSRF check failed: unauthorized origin" });
     }
+    return next();
   }
-  next();
+  return csrfMiddleware(req, res, next);
 };
 app.use(csrfProtection);
 
