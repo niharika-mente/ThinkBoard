@@ -5,7 +5,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-900/50 backdrop-blur-sm border-t border-gray-700/50 mt-12">
+    <footer className="bg-gray-100 dark:bg-gray-900/50 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700/50 mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
@@ -14,7 +14,7 @@ const Footer = () => {
             <h2 className="text-xl font-bold text-white mb-2">
               ThinkBoard
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Your intelligent note-taking companion.
             </p>
           </div>
