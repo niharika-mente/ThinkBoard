@@ -3,11 +3,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
 import { ArrowLeftIcon, LoaderIcon, Trash2Icon } from "lucide-react";
+import ConfirmModal from "../components/ConfirmModal";
 
 const NoteDetailPage = () => {
   const [note, setNote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const navigate = useNavigate();
   const { id } = useParams();
@@ -28,8 +30,7 @@ const NoteDetailPage = () => {
   }, [id]);
 
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this note?")) return;
-
+    
     try {
       await api.delete(`/notes/${id}`);
       toast.success("Note deleted");
@@ -99,7 +100,7 @@ const NoteDetailPage = () => {
               Back to Notes
             </Link>
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               className="inline-flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
             >
               <Trash2Icon size={18} />
@@ -152,6 +153,17 @@ const NoteDetailPage = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title={`Delete "${note?.title || "Untitled"}"?`}
+        message="This action cannot be undone."
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={async () => {
+          setShowDeleteModal(false);
+          await handleDelete();
+        }}
+      />
     </div>
   );
 };

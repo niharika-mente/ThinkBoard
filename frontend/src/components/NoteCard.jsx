@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { formatDate } from "../lib/utils";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
+import { useState } from "react";
+import ConfirmModal from "./ConfirmModal";
 
 const NoteCard = ({
   note,
@@ -15,12 +17,11 @@ const NoteCard = ({
   setChildDragIndicator = () => {},
 }) => {
   const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleDelete = async (e, id) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!window.confirm("Are you sure you want to delete this note?")) return;
 
     try {
       await api.delete(`/notes/${id}`);
@@ -149,7 +150,11 @@ const NoteCard = ({
               {/* Delete Button */}
               <button
                 className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-950"
-                onClick={(e) => handleDelete(e, note._id)}
+                onClick={(e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  setShowDeleteModal(true);
+}}
                 aria-label="Delete note"
                 title="Delete"
               >
@@ -159,6 +164,22 @@ const NoteCard = ({
           </div>
         </div>
       </Link>
+      <ConfirmModal
+  isOpen={showDeleteModal}
+  title={`Delete "${note.title || "Untitled"}"?`}
+  message="This action cannot be undone."
+  onCancel={() => setShowDeleteModal(false)}
+  onConfirm={async () => {
+    setShowDeleteModal(false);
+    await handleDelete(
+      {
+        preventDefault: () => {},
+        stopPropagation: () => {},
+      },
+      note._id
+    );
+  }}
+/>
     </div>
   );
 };
