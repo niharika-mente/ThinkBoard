@@ -1,8 +1,8 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Footer from "./components/Footer";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -15,7 +15,6 @@ const AppRoutes = () => {
   const { user, loading } = useAuth();
   const { theme } = useTheme();
 
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -25,53 +24,59 @@ const AppRoutes = () => {
   }
 
   return (
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Main Content */}
+      <div className="flex-grow">
+        <Routes>
+          <Route
+            path="/"
+            element={
+              !user ? <Navigate to="/signup" replace /> : <Navigate to="/home" replace />
+            }
+          />
 
-    <Routes>
-      <Route
-        path="/"
-        element={
-          !user ? <Navigate to="/signup" replace /> : <Navigate to="/home" replace />
-        }
-      />
+          <Route
+            path="/signup"
+            element={user ? <Navigate to="/home" replace /> : <Signup />}
+          />
 
-      <Route
-        path="/signup"
-        element={user ? <Navigate to="/home" replace /> : <Signup />}
-      />
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/home" replace /> : <Login />}
+          />
 
-      <Route
-        path="/login"
-        element={user ? <Navigate to="/home" replace /> : <Login />}
-      />
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute>
+                <CreatePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/note/:id"
+            element={
+              <ProtectedRoute>
+                <NoteDetailPage />
+              </ProtectedRoute>
+            }
+          />
 
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <HomePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/create"
-        element={
-          <ProtectedRoute>
-            <CreatePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/note/:id"
-        element={
-          <ProtectedRoute>
-            <NoteDetailPage />
-          </ProtectedRoute>
-        }
-      />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-
+      {/* ✅ Footer - Har page par dikhega */}
+      <Footer />
+    </div>
   );
 };
 

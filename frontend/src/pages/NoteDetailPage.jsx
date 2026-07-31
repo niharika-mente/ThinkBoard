@@ -41,8 +41,8 @@ const NoteDetailPage = () => {
   };
 
   const handleSave = async () => {
-    if (!note.title.trim() || !note.content.trim()) {
-      toast.error("Please add a title or content");
+    if (!note.title.trim()) {
+      toast.error("Title is required");
       return;
     }
 
@@ -73,17 +73,14 @@ const NoteDetailPage = () => {
 
   if (!note) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <p className="text-gray-500 dark:text-gray-400">Note not found</p>
-      </div>
-    );
-  }
-
-  if (!note) {
-    return (
-      <div className="min-h-screen bg-base-200 flex flex-col items-center justify-center gap-4">
-        <h2 className="text-xl font-semibold text-gray-400">Note not found</h2>
-        <Link to="/" className="btn btn-primary">Back to Notes</Link>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center gap-4">
+        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Note not found</h2>
+        <Link
+          to="/"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-md"
+        >
+          Back to Notes
+        </Link>
       </div>
     );
   }

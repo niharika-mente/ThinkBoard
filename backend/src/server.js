@@ -51,7 +51,12 @@ app.use(cookieParser());
 // Optional auth to populate req.user for rateLimiter
 const optionalAuthenticateUser = (req, res, next) => {
   try {
-    const token = req.cookies?.token;
+    let token = req.cookies?.token;
+
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = decoded;
@@ -63,8 +68,8 @@ const optionalAuthenticateUser = (req, res, next) => {
 };
 
 // Rate limiting and optional auth applied only to API routes
-app.use("/api", rateLimiter);
 app.use("/api", optionalAuthenticateUser);
+app.use("/api", rateLimiter);
 
 // ==================== ROUTES ====================
 app.use("/api/notes", notesRoutes);

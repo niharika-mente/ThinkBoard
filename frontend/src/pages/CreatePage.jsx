@@ -15,8 +15,8 @@ const CreatePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title.trim() || !content.trim()) {
-      toast.error("All fields are required");
+    if (!title.trim()) {
+      toast.error("Title is required");
       return;
     }
 
