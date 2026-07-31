@@ -48,6 +48,19 @@ if (process.env.NODE_ENV !== "production") {
 app.use(express.json());
 app.use(cookieParser());
 
+// CSRF Protection Middleware
+const csrfProtection = (req, res, next) => {
+  if (["POST", "PUT", "DELETE", "PATCH"].includes(req.method)) {
+    const origin = req.headers.origin || req.headers.referer;
+    const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+    if (origin && !origin.startsWith(allowedOrigin)) {
+      return res.status(403).json({ message: "CSRF check failed: unauthorized origin" });
+    }
+  }
+  next();
+};
+app.use(csrfProtection);
+
 // Optional auth to populate req.user for rateLimiter
 const optionalAuthenticateUser = (req, res, next) => {
   try {
