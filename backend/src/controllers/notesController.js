@@ -183,12 +183,12 @@ export async function reorderNotes(req, res) {
             return res.status(400).json({ message: "Invalid group id" });
         }
 
-        const draggedNote = await Note.findOne({ _id: id, userId: req.user._id });
+        const draggedNote = await Note.findOne({ _id: new mongoose.Types.ObjectId(id), userId: req.user._id });
         if (!draggedNote) {
             return res.status(404).json({ message: "Note not found" });
         }
 
-        const targetParentId = groupId || null;
+        const targetParentId = groupId ? new mongoose.Types.ObjectId(groupId) : null;
 
         // Fetch sibling notes in target container sorted by current position
         const siblingNotes = await Note.find({
@@ -198,13 +198,13 @@ export async function reorderNotes(req, res) {
 
         // Filter out the dragged note if it exists in the siblings list
         const filteredSiblings = siblingNotes.filter(
-            (n) => n._id.toString() !== id
+            (n) => n._id.toString() !== String(id)
         );
 
         // Find position to insert
         if (targetId) {
             const targetIndex = filteredSiblings.findIndex(
-                (n) => n._id.toString() === targetId
+                (n) => n._id.toString() === String(targetId)
             );
             if (targetIndex !== -1) {
                 filteredSiblings.splice(targetIndex, 0, draggedNote);
@@ -241,16 +241,16 @@ export async function groupNotes(req, res) {
     try {
         const { sourceId, targetId, title } = req.body;
 
-        if (!sourceId || !targetId || !title || !title.trim()) {
+        if (typeof title !== "string" || !title.trim()) {
             return res.status(400).json({ message: "sourceId, targetId, and title are required" });
         }
 
-        if (!mongoose.Types.ObjectId.isValid(sourceId) || !mongoose.Types.ObjectId.isValid(targetId)) {
+        if (!sourceId || !targetId || !mongoose.Types.ObjectId.isValid(sourceId) || !mongoose.Types.ObjectId.isValid(targetId)) {
             return res.status(400).json({ message: "Invalid note IDs" });
         }
 
-        const sourceNote = await Note.findOne({ _id: sourceId, userId: req.user._id });
-        const targetNote = await Note.findOne({ _id: targetId, userId: req.user._id });
+        const sourceNote = await Note.findOne({ _id: new mongoose.Types.ObjectId(sourceId), userId: req.user._id });
+        const targetNote = await Note.findOne({ _id: new mongoose.Types.ObjectId(targetId), userId: req.user._id });
 
         if (!sourceNote || !targetNote) {
             return res.status(404).json({ message: "Source or target note not found" });

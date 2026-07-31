@@ -1,10 +1,12 @@
 import express from "express";
 import { getAllNotes, getNoteById, createNote, updateNote, deleteNote, reorderNotes, groupNotes } from "../controllers/notesController.js";
 import { authenticateUser } from "../middleware/authMiddleware.js";
+import rateLimiter from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-// Protect all notes routes - only authenticated users can access notes endpoints
+// Protect all notes routes - rate-limit and authenticate
+router.use(rateLimiter);
 router.use(authenticateUser);
 
 router.get("/", getAllNotes);
