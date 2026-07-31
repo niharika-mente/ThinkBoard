@@ -6,7 +6,7 @@ import Note from "../models/Note.js";
  */
 export async function getAllNotes(req, res) {
     try {
-        const notes = await Note.find({ userId: req.user._id }).sort({ createdAt: -1 });
+        const notes = await Note.find({ userId: req.user._id }).sort({ position: 1, createdAt: -1 });
 
         res.status(200).json(notes);
     } catch (error) {
@@ -164,3 +164,140 @@ export async function deleteNote(req, res) {
         });
     }
 }
+
+/**
+ * Reorder notes (drag and drop)
+ */
+export async function reorderNotes(req, res) {
+    try {
+        const { id } = req.params; // Dragged note ID
+        const { targetId, groupId } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid note id" });
+        }
+        if (targetId && !mongoose.Types.ObjectId.isValid(targetId)) {
+            return res.status(400).json({ message: "Invalid target id" });
+        }
+        if (groupId && !mongoose.Types.ObjectId.isValid(groupId)) {
+            return res.status(400).json({ message: "Invalid group id" });
+        }
+
+        const draggedNote = await Note.findOne({ _id: new mongoose.Types.ObjectId(id), userId: req.user._id });
+        if (!draggedNote) {
+            return res.status(404).json({ message: "Note not found" });
+        }
+
+        const targetParentId = groupId ? new mongoose.Types.ObjectId(groupId) : null;
+
+        // Fetch sibling notes in target container sorted by current position
+        const siblingNotes = await Note.find({
+            userId: req.user._id,
+            parentId: targetParentId
+        }).sort({ position: 1, createdAt: -1 });
+
+        // Filter out the dragged note if it exists in the siblings list
+        const filteredSiblings = siblingNotes.filter(
+            (n) => n._id.toString() !== String(id)
+        );
+
+        // Find position to insert
+        if (targetId) {
+            const targetIndex = filteredSiblings.findIndex(
+                (n) => n._id.toString() === String(targetId)
+            );
+            if (targetIndex !== -1) {
+                filteredSiblings.splice(targetIndex, 0, draggedNote);
+            } else {
+                filteredSiblings.push(draggedNote);
+            }
+        } else {
+            filteredSiblings.push(draggedNote);
+        }
+
+        // Prepare bulk write operations to update positions & parentId for all siblings
+        const bulkOps = filteredSiblings.map((n, index) => ({
+            updateOne: {
+                filter: { _id: n._id },
+                update: { $set: { position: index, parentId: targetParentId } }
+            }
+        }));
+
+        if (bulkOps.length > 0) {
+            await Note.bulkWrite(bulkOps);
+        }
+
+        res.status(200).json({ message: "Notes reordered successfully" });
+    } catch (error) {
+        console.error("Error in reorderNotes controller:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+/**
+ * Combine notes into a stack/group
+ */
+export async function groupNotes(req, res) {
+    try {
+        const { sourceId, targetId, title } = req.body;
+
+        if (typeof title !== "string" || !title.trim()) {
+            return res.status(400).json({ message: "sourceId, targetId, and title are required" });
+        }
+
+        if (!sourceId || !targetId || !mongoose.Types.ObjectId.isValid(sourceId) || !mongoose.Types.ObjectId.isValid(targetId)) {
+            return res.status(400).json({ message: "Invalid note IDs" });
+        }
+
+        const sourceNote = await Note.findOne({ _id: new mongoose.Types.ObjectId(sourceId), userId: req.user._id });
+        const targetNote = await Note.findOne({ _id: new mongoose.Types.ObjectId(targetId), userId: req.user._id });
+
+        if (!sourceNote || !targetNote) {
+            return res.status(404).json({ message: "Source or target note not found" });
+        }
+
+        // If target is already a group, add the source note to it
+        if (targetNote.isGroup) {
+            // Find max position among existing children in this group
+            const existingChildren = await Note.find({
+                userId: req.user._id,
+                parentId: targetNote._id
+            }).sort({ position: -1 });
+
+            const newPosition = existingChildren.length > 0 ? (existingChildren[0].position + 1) : 0;
+
+            sourceNote.parentId = targetNote._id;
+            sourceNote.position = newPosition;
+            await sourceNote.save();
+
+            return res.status(200).json(targetNote);
+        }
+
+        // Create a new group note
+        const groupNote = new Note({
+            userId: req.user._id,
+            title: title.trim(),
+            content: "",
+            isGroup: true,
+            parentId: null,
+            position: targetNote.position || 0
+        });
+
+        const savedGroup = await groupNote.save();
+
+        // Update source and target notes to point to the new group note
+        sourceNote.parentId = savedGroup._id;
+        sourceNote.position = 0;
+
+        targetNote.parentId = savedGroup._id;
+        targetNote.position = 1;
+
+        await Promise.all([sourceNote.save(), targetNote.save()]);
+
+        res.status(201).json(savedGroup);
+    } catch (error) {
+        console.error("Error in groupNotes controller:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
