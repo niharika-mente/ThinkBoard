@@ -15,7 +15,7 @@ const rateLimiter = async (req, res, next) => {
   }
   
   try {
-    const ip = req.headers["x-forwarded-for"]?.split(",")[0].trim() || req.socket.remoteAddress || req.ip;
+    const ip = req.ip || req.socket?.remoteAddress || "global-rate-limit";
     const identifier = req.user?._id || ip || "global-rate-limit";
     const { success } = await ratelimit.limit(identifier);
     if (!success) {

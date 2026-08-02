@@ -27,6 +27,8 @@ dotenv.config();
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const app = express();
+// Enable trust proxy for reverse proxies (Render, Vercel, Nginx)
+app.set("trust proxy", 1);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
