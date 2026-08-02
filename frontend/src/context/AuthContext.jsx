@@ -12,14 +12,12 @@ export const AuthProvider = ({ children }) => {
   const hasChecked = useRef(false);  
 
   useEffect(() => {
-   
     if (hasChecked.current) return;
     hasChecked.current = true;
 
     const checkAuth = async () => {
       try {
         const response = await api.get("/auth/me");
-       
         if (response.data.user) {
           setUser(response.data.user);
         } else {
@@ -35,6 +33,20 @@ export const AuthProvider = ({ children }) => {
     
     checkAuth();
   }, []);  
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser((prevUser) => {
+        if (prevUser) {
+          toast.error("Session expired. Please login again.");
+        }
+        return null;
+      });
+    };
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
+  }, []);
 
   const register = async (userData) => {
     try {

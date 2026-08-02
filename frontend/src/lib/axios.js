@@ -14,12 +14,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log("Unauthorized - but not redirecting immediately");
-    
+      const url = error.config?.url || "";
+      if (!url.includes("/auth/login") && !url.includes("/auth/register")) {
+        window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+      }
     }
     return Promise.reject(error);
   }
 );
 
 export default api;
-
