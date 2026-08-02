@@ -64,6 +64,14 @@ export async function createNote(req, res) {
             return res.status(400).json({ message: "Title is required" });
         }
 
+        if (title.trim().length > 100) {
+            return res.status(400).json({ message: "Title cannot exceed 100 characters" });
+        }
+
+        if (content.trim().length > 5000) {
+            return res.status(400).json({ message: "Content cannot exceed 5000 characters" });
+        }
+
         const note = new Note({
             userId: req.user._id,
             title: title.trim(),
@@ -99,8 +107,17 @@ export async function updateNote(req, res) {
         if (typeof title !== "string" || typeof content !== "string") {
             return res.status(400).json({ message: "Title and content must be strings" });
         }
+
         if (!title.trim()) {
             return res.status(400).json({ message: "Title is required" });
+        }
+
+        if (title.trim().length > 100) {
+            return res.status(400).json({ message: "Title cannot exceed 100 characters" });
+        }
+
+        if (content.trim().length > 5000) {
+            return res.status(400).json({ message: "Content cannot exceed 5000 characters" });
         }
      
 

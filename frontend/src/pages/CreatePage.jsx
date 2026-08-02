@@ -66,11 +66,17 @@ const CreatePage = () => {
               <form onSubmit={handleSubmit}>
                 {/* Title Input */}
                 <div className="mb-5">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Title
-                  </label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Title
+                    </label>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {title.length} / 100
+                    </span>
+                  </div>
                   <input
                     type="text"
+                    maxLength={100}
                     placeholder="Note Title"
                     className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     value={title}
@@ -80,10 +86,16 @@ const CreatePage = () => {
 
                 {/* Content Textarea */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Content
-                  </label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Content
+                    </label>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {content.length} / 5000
+                    </span>
+                  </div>
                   <textarea
+                    maxLength={5000}
                     placeholder="Write your note here..."
                     rows={8}
                     className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
