@@ -8,6 +8,7 @@ import NoteCard from "../components/NoteCard";
 import NoteCardSkeleton from "../components/NoteCardSkeleton";
 import NotesNotFound from "../components/NotesNotFound";
 import { useAuth } from "../context/AuthContext";
+import { SearchIcon } from "lucide-react";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const HomePage = () => {
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Drag & drop state
   const [activeDragId, setActiveDragId] = useState(null);
@@ -25,8 +27,16 @@ const HomePage = () => {
   const [modalTargetId, setModalTargetId] = useState(null);
   const [groupTitle, setGroupTitle] = useState("");
 
-  // Top-level notes (not grouped under another note)
-  const topLevelNotes = notes.filter((n) => !n.groupId);
+  // Filter top-level notes by search query
+  const filteredNotes = notes.filter((n) => {
+    if (n.groupId) return false;
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      (n.title && n.title.toLowerCase().includes(query)) ||
+      (n.content && n.content.toLowerCase().includes(query))
+    );
+  });
 
   const fetchNotes = async () => {
     try {
@@ -133,6 +143,22 @@ const HomePage = () => {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
       <div className="max-w-7xl mx-auto p-4 mt-6">
+        {/* Search Bar */}
+        {!loading && notes.length > 0 && !isRateLimited && (
+          <div className="mb-6 max-w-md mx-auto relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+              <SearchIcon size={18} />
+            </div>
+            <input
+              type="text"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors shadow-sm"
+              placeholder="Search notes by title or content..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        )}
+
         {isRateLimited && <RateLimitedUI onRetry={() => window.location.reload()} />}
 
         {loading && (
@@ -145,9 +171,15 @@ const HomePage = () => {
 
         {!loading && notes.length === 0 && !isRateLimited && <NotesNotFound />}
 
-        {!loading && notes.length > 0 && !isRateLimited && (
+        {!loading && notes.length > 0 && filteredNotes.length === 0 && !isRateLimited && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400 text-lg">No notes match "{searchQuery}"</p>
+          </div>
+        )}
+
+        {!loading && filteredNotes.length > 0 && !isRateLimited && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            {topLevelNotes.map((note) => (
+            {filteredNotes.map((note) => (
               <NoteCard
                 key={note._id}
                 note={note}
