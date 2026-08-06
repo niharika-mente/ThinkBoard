@@ -125,6 +125,16 @@ const NoteDetailPage = () => {
                 />
               </div>
 
+              {/* Timestamp Info */}
+              <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                <p>
+                  Created: {new Date(note.createdAt).toLocaleString()}
+                </p>
+                <p>
+                  Last Updated: {new Date(note.updatedAt).toLocaleString()}
+                </p>
+              </div>
+
               {/* Content Textarea */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
