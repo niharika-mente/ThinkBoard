@@ -3,6 +3,18 @@ import Validate from "../Utils/Validator.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// Shared auth cookie attributes. Hardened for production (HTTPS) while
+// keeping local HTTP development working. Reused when setting and clearing
+// the cookie so the browser reliably removes it on logout.
+const isProd = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax", // "none" requires secure; needed if frontend and API are cross-site
+  path: "/",
+};
+
 // ==================== REGISTER ====================
 export const register = async (req, res) => {
   try {
@@ -31,11 +43,7 @@ export const register = async (req, res) => {
       { expiresIn: 60 * 60 },
     );
 
-    res.cookie("token", token, {
-      maxAge: 60 * 60 * 1000,
-      httpOnly: true,
-      path: "/",
-    });
+    res.cookie("token", token, { ...cookieOptions, maxAge: 60 * 60 * 1000 });
 
     res.status(201).json({
       success: true,
@@ -80,11 +88,7 @@ export const login = async (req, res) => {
       { expiresIn: 60 * 60 },
     );
 
-    res.cookie("token", token, {
-      maxAge: 60 * 60 * 1000,
-      httpOnly: true,
-      path: "/",
-    });
+    res.cookie("token", token, { ...cookieOptions, maxAge: 60 * 60 * 1000 });
 
     res.status(200).json({
       success: true,
@@ -132,10 +136,7 @@ export const getCurrentUser = async (req, res) => {
  */
 export const logout = async (req, res) => {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      path: "/",
-    });
+    res.clearCookie("token", cookieOptions);
     res.status(200).json({
       success: true,
       message: "Logged out successfully",
