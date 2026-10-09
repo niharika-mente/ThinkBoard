@@ -130,9 +130,21 @@ const NoteCard = ({
               <svg className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                {formatDate(new Date(note.createdAt))}
-              </span>
+              {/* Look for this block in frontend/src/components/NoteCard.jsx */}
+<span className="text-xs text-gray-400 dark:text-gray-500">
+  {(() => {
+    const createdTime = new Date(note.createdAt).getTime();
+    const updatedTime = note.updatedAt ? new Date(note.updatedAt).getTime() : createdTime;
+    
+    // Consider it edited if updatedAt is at least 1 second greater than createdAt
+    const isEdited = note.updatedAt && (updatedTime - createdTime > 1000);
+
+    return isEdited
+      ? `Updated ${formatDate(new Date(note.updatedAt))}`
+      : formatDate(new Date(note.createdAt));
+  })()}
+</span>
+
             </div>
             
             {/* Action Buttons */}
